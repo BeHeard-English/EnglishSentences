@@ -1,0 +1,495 @@
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Sentences with Be Heard</title>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/mammoth/1.6.0/mammoth.browser.min.js"></script>
+    <link href="https://fonts.googleapis.com/css2?family=Quicksand:wght@400;600;700&display=swap" rel="stylesheet">
+    <style>
+        :root {
+            --primary: #001184;
+            --secondary: #eef2ff;
+            --accent: #ff70a6;
+            --success: #28a745;
+            --error: #dc3545;
+            --bg: #f8f9fe;
+            --text: #2d3436;
+        }
+
+        body {
+            font-family: 'Quicksand', sans-serif;
+            background-color: var(--bg);
+            color: var(--text);
+            margin: 0;
+            padding: 0;
+            line-height: 1.6;
+        }
+
+        .container { max-width: 1100px; margin: 0 auto; padding: 20px; }
+
+        header {
+            text-align: center;
+            padding: 40px 20px;
+            background: linear-gradient(135deg, var(--primary), #051aab);
+            color: white;
+            border-radius: 0 0 50px 50px;
+            margin-bottom: 30px;
+            box-shadow: 0 10px 20px rgba(0,0,0,0.1);
+        }
+
+        /* --- Input Section --- */
+        .card {
+            background: white;
+            padding: 30px;
+            border-radius: 25px;
+            box-shadow: 0 8px 25px rgba(0,0,0,0.05);
+            margin-bottom: 30px;
+        }
+
+        #input-area {
+            width: 100%;
+            min-height: 150px;
+            border: 2px dashed #cbd5e0;
+            border-radius: 15px;
+            padding: 15px;
+            font-size: 16px;
+            outline: none;
+            margin-bottom: 20px;
+            box-sizing: border-box;
+        }
+
+        #input-area:focus { border-color: var(--primary); background: #fcfdff; }
+
+        .btn-group { display: flex; gap: 15px; flex-wrap: wrap; }
+
+        button {
+            background-color: var(--primary);
+            color: white;
+            border: none;
+            padding: 12px 28px;
+            border-radius: 50px;
+            cursor: pointer;
+            font-weight: 700;
+            transition: all 0.3s ease;
+        }
+
+        button:hover { transform: translateY(-2px); box-shadow: 0 5px 15px rgba(0,17,132,0.3); }
+        .btn-alt { background-color: var(--accent); }
+
+        /* --- Exercise Layout --- */
+        .main-layout {
+            display: grid;
+            grid-template-columns: 1fr 300px;
+            gap: 30px;
+            position: relative;
+        }
+
+        @media (max-width: 900px) {
+            .main-layout { grid-template-columns: 1fr; }
+            .word-bank-container { position: static !important; }
+        }
+
+        .sentence-card {
+            background: white;
+            padding: 20px;
+            margin-bottom: 15px;
+            border-radius: 18px;
+            display: flex;
+            align-items: flex-start;
+            gap: 15px;
+            box-shadow: 0 4px 12px rgba(0,0,0,0.03);
+        }
+
+        .q-number {
+            background: var(--secondary);
+            color: var(--primary);
+            font-weight: 700;
+            min-width: 35px;
+            height: 35px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            border-radius: 50%;
+        }
+
+        .drop-zone {
+            display: inline-block;
+            min-width: 120px;
+            border-bottom: 2px solid var(--primary);
+            margin: 0 5px;
+            text-align: center;
+            font-weight: 700;
+            color: var(--primary);
+            cursor: pointer;
+            background: #f0f3ff;
+            border-radius: 8px 8px 0 0;
+            padding: 2px 8px;
+            height: 28px;
+            vertical-align: bottom;
+            transition: background 0.2s;
+        }
+
+        .drop-zone:hover { background: #e0e7ff; }
+
+        /* --- Sticky Word Bank --- */
+        .word-bank-container {
+            position: sticky;
+            top: 20px;
+            height: fit-content;
+        }
+
+        .word-bank {
+            background: white;
+            padding: 20px;
+            border-radius: 25px;
+            border: 2px solid var(--secondary);
+            box-shadow: 0 10px 25px rgba(0,0,0,0.05);
+        }
+
+        .word-bank h3 { margin-top: 0; color: var(--primary); font-size: 1.2rem; text-align: center; }
+
+        .draggable-word {
+            display: inline-block;
+            background: white;
+            padding: 8px 16px;
+            margin: 6px;
+            border-radius: 12px;
+            cursor: grab;
+            border: 1px solid #e2e8f0;
+            box-shadow: 0 2px 5px rgba(0,0,0,0.05);
+            font-weight: 600;
+            transition: all 0.2s;
+        }
+
+        .draggable-word.used {
+            opacity: 0.3;
+            cursor: not-allowed;
+            pointer-events: none;
+            background: #f1f5f9;
+        }
+
+        /* --- Feedback --- */
+        .feedback-box { margin-top: 10px; border-top: 1px solid #eee; padding-top: 10px; font-size: 0.95rem; }
+        .viet-sub { color: #636e72; font-style: italic; display: block; margin-top: 4px; }
+        .correct-ans { color: var(--success); font-weight: 700; }
+        .wrong-ans { color: var(--error); text-decoration: line-through; margin-right: 5px; }
+        
+        .score-banner {
+            font-size: 2rem;
+            text-align: center;
+            color: var(--primary);
+            margin-bottom: 30px;
+        }
+
+        .hidden { display: none; }
+    </style>
+</head>
+<body>
+
+<header>
+    <h1>Học từ qua câu cùng Be Heard</h1>
+    <p>Kéo thả từ vào ô trống hoặc nhấp vào ô để hủy chọn</p>
+</header>
+
+<div class="container">
+    <div id="setup-card" class="card">
+        <div id="input-area" contenteditable="true" placeholder="Dán văn bản có từ In đậm (Bold) hoặc Gạch chân (Underline) vào đây..."></div>
+        <div class="btn-group">
+            <input type="file" id="file-upload" accept=".docx" style="display:none">
+            <button onclick="document.getElementById('file-upload').click()">📁 Tải file .docx</button>
+            <button class="btn-alt" onclick="startExercise()">🎯 Bắt đầu làm bài</button>
+        </div>
+    </div>
+
+    <div id="exercise-view" class="hidden">
+        <div class="main-layout">
+            <div id="questions-list"></div>
+            
+            <div class="word-bank-container">
+                <div class="word-bank">
+                    <h3>Kho từ vựng</h3>
+                    <div id="bank-content"></div>
+                </div>
+            </div>
+        </div>
+        <div style="text-align: center; margin-top: 40px;">
+            <button id="submit-btn" style="padding: 15px 60px; font-size: 1.2rem;">Nộp bài</button>
+        </div>
+    </div>
+
+    <div id="result-view" class="card hidden">
+        <div id="score-text" class="score-banner"></div>
+        <div id="detailed-results"></div>
+        <div style="text-align: center; margin-top: 30px;">
+            <button onclick="location.reload()">Làm bài mới</button>
+        </div>
+    </div>
+</div>
+
+<script>
+    /** --- CẤU HÌNH NGÂN HÀNG CÂU HỎI DỰ PHÒNG --- */
+    const FALLBACK_DATA = [
+        { text: "The team had to **collaborate** closely to meet the project deadline.", trans: "Nhóm đã phải hợp tác chặt chẽ để kịp thời hạn dự án." },
+        { text: "Her **meticulous** planning ensured the event was a huge success.", trans: "Sự lập kế hoạch tỉ mỉ của cô ấy đã đảm bảo sự kiện thành công rực rỡ." },
+        { text: "Scientists are trying to **ascertain** the cause of the phenomenon.", trans: "Các nhà khoa học đang cố gắng xác định nguyên nhân của hiện tượng này." },
+        { text: "The new law will **implement** stricter rules on waste disposal.", trans: "Luật mới sẽ thực thi các quy định nghiêm ngặt hơn về việc đổ rác thải." },
+        { text: "It is **inevitable** that technology will change the way we work.", trans: "Việc công nghệ thay đổi cách chúng ta làm việc là điều không thể tránh khỏi." },
+        { text: "The manager's **ambiguous** instructions led to many mistakes.", trans: "Những chỉ dẫn mơ hồ của người quản lý đã dẫn đến nhiều sai lầm." },
+        { text: "Students are encouraged to **utilize** the library's online resources.", trans: "Học sinh được khuyến khích tận dụng các nguồn tài nguyên trực tuyến của thư viện." },
+        { text: "The company needs to **diversify** its products to reach more customers.", trans: "Công ty cần đa dạng hóa sản phẩm để tiếp cận nhiều khách hàng hơn." },
+        { text: "His **eloquent** speech moved many people in the audience.", trans: "Bài phát biểu hùng hồn của anh ấy đã làm lay động nhiều người trong khán giả." },
+        { text: "The government took measures to **alleviate** poverty in rural areas.", trans: "Chính phủ đã thực hiện các biện pháp để giảm bớt nghèo đói ở các vùng nông thôn." },
+        { text: "The data shows a **significant** increase in online sales this year.", trans: "Dữ liệu cho thấy một sự gia tăng đáng kể trong doanh số bán hàng trực tuyến năm nay." },
+        { text: "She has a **pragmatic** approach to solving complex problems.", trans: "Cô ấy có một cách tiếp cận thực tế để giải quyết các vấn đề phức tạp." },
+        { text: "We must **evaluate** the results before making a final decision.", trans: "Chúng ta phải đánh giá kết quả trước khi đưa ra quyết định cuối cùng." },
+        { text: "The building's **infrastructure** was damaged during the storm.", trans: "Cơ sở hạ tầng của tòa nhà đã bị hư hại trong cơn bão." },
+        { text: "He is a **versatile** actor who can play both comedy and drama.", trans: "Anh ấy là một diễn viên linh hoạt, có thể đóng cả hài kịch và bi kịch." },
+        { text: "The CEO decided to **consolidate** the two departments to improve efficiency.", trans: "Giám đốc điều hành quyết định hợp nhất hai bộ phận để cải thiện hiệu quả." },
+        { text: "Heavy rain might **jeopardize** our chances of finishing the construction.", trans: "Mưa lớn có thể gây nguy hiểm cho cơ hội hoàn thành công trình của chúng ta." },
+        { text: "The report offers a **comprehensive** analysis of the current market.", trans: "Bản báo cáo đưa ra một phân tích toàn diện về thị trường hiện tại." },
+        { text: "The witness provided **contradictory** statements during the trial.", trans: "Nhân chứng đã đưa ra những lời khai mâu thuẫn trong phiên tòa." },
+        { text: "Digital transformation can **exacerbate** the gap between rich and poor.", trans: "Chuyển đổi kỹ thuật số có thể làm trầm trọng thêm khoảng cách giàu nghèo." },
+        { text: "After hours of debate, the board finally reached a **consensus**.", trans: "Sau nhiều giờ tranh luận, hội đồng quản trị cuối cùng đã đạt được sự đồng thuận." },
+        { text: "High interest rates often **deter** people from taking out loans.", trans: "Lãi suất cao thường ngăn cản mọi người vay vốn." },
+        { text: "The school aims to **foster** a sense of community among students.", trans: "Nhà trường nhằm mục đích nuôi dưỡng ý thức cộng đồng trong học sinh." },
+        { text: "The project was cancelled due to a **deficit** in the annual budget.", trans: "Dự án bị hủy bỏ do thâm hụt ngân sách hàng năm." },
+        { text: "Her **unprecedented** success inspired many young entrepreneurs.", trans: "Thành công chưa từng có của cô đã truyền cảm hứng cho nhiều doanh nhân trẻ." },
+        { text: "The lawyer tried to **elucidate** the complex terms of the contract.", trans: "Luật sư cố gắng giải thích rõ ràng các điều khoản phức tạp của hợp đồng." },
+        { text: "There is no **tangible** evidence to support your accusations.", trans: "Không có bằng chứng hữu hình nào hỗ trợ cho những lời cáo buộc của bạn." },
+        { text: "The local residents are **indigenous** to this mountainous region.", trans: "Những người dân địa phương là người bản địa của vùng núi này." },
+        { text: "Artificial Intelligence is a **burgeoning** field with many job openings.", trans: "Trí tuệ nhân tạo là một lĩnh vực đang phát triển nhanh chóng với nhiều cơ hội việc làm." },
+        { text: "The researchers found a **correlation** between stress and heart disease.", trans: "Các nhà nghiên cứu đã tìm thấy mối tương quan giữa căng thẳng và bệnh tim." },
+        { text: "The government should **subsidize** public transport to reduce pollution.", trans: "Chính phủ nên trợ giá cho phương tiện công cộng để giảm ô nhiễm." },
+        { text: "He is **oblivious** to the fact that everyone is laughing at him.", trans: "Anh ta không hề hay biết sự thật rằng mọi người đang cười nhạo mình." },
+        { text: "The medicine will **mitigate** the symptoms but won't cure the cold.", trans: "Thuốc sẽ làm giảm các triệu chứng nhưng không chữa khỏi bệnh cảm lạnh." },
+        { text: "The company's profits began to **fluctuate** wildly last quarter.", trans: "Lợi nhuận của công ty bắt đầu dao động dữ dội trong quý vừa qua." },
+        { text: "Working in a call center can be extremely **monotonous**.", trans: "Làm việc tại trung tâm cuộc gọi có thể vô cùng đơn điệu." },
+        { text: "They need to **refurbish** the old office before moving back in.", trans: "Họ cần tân trang lại văn phòng cũ trước khi dời lại vào đó." },
+        { text: "The speaker's voice was barely **audible** over the noise of the crowd.", trans: "Giọng nói của người diễn thuyết hầu như không thể nghe thấy được vì tiếng ồn của đám đông." },
+        { text: "Education is a **fundamental** right for every human being.", trans: "Giáo dục là quyền cơ bản của mỗi con người." },
+        { text: "She was **apprehensive** about her first day in the new position.", trans: "Cô ấy cảm thấy lo lắng về ngày đầu tiên ở vị trí mới." },
+        { text: "The teacher gave us **explicit** instructions on how to write the essay.", trans: "Giáo viên đã cho chúng tôi những chỉ dẫn rõ ràng về cách viết bài luận." },
+        { text: "His theory is purely **hypothetical** and has not been tested yet.", trans: "Lý thuyết của ông hoàn toàn mang tính giả thuyết và vẫn chưa được kiểm chứng." },
+        { text: "We need to **scrutinize** the documents for any potential errors.", trans: "Chúng ta cần kiểm tra kỹ lưỡng các tài liệu để tìm ra bất kỳ lỗi tiềm ẩn nào." },
+        { text: "A healthy diet is **beneficial** for your overall well-being.", trans: "Chế độ ăn uống lành mạnh có lợi cho sức khỏe tổng thể của bạn." },
+        { text: "The instructions were so **convoluted** that nobody understood them.", trans: "Các hướng dẫn quá rắc rối đến nỗi không ai hiểu được chúng." },
+        { text: "She handled the difficult situation with great **discretion**.", trans: "Cô ấy đã xử lý tình huống khó khăn với sự thận trọng tuyệt vời." },
+        { text: "It is often **counterproductive** to work late into the night.", trans: "Làm việc muộn vào đêm thường phản tác dụng." },
+        { text: "The judge's decision was **impartial** and based only on facts.", trans: "Quyết định của thẩm phán là công tâm và chỉ dựa trên sự thật." },
+        { text: "This software is **compatible** with most operating systems.", trans: "Phần mềm này tương thích với hầu hết các hệ điều hành." },
+        { text: "The smell of fresh bread is **pervasive** in the bakery.", trans: "Mùi bánh mì tươi lan tỏa khắp tiệm bánh." },
+        { text: "Her **resilience** helped her overcome the tragedy and move on.", trans: "Sự kiên cường đã giúp cô vượt qua bi kịch và tiếp tục sống." },
+        { text: "The country enjoys a period of great **prosperity** thanks to trade.", trans: "Đất nước tận hưởng một thời kỳ thịnh vượng lớn nhờ vào thương mại." },
+        { text: "You must **adhere** to the safety regulations at all times.", trans: "Bạn phải tuân thủ các quy định an toàn vào mọi lúc." },
+        { text: "The internet has become **ubiquitous** in modern society.", trans: "Internet đã trở nên phổ biến khắp mọi nơi trong xã hội hiện đại." },
+        { text: "His contribution to the project was **invaluable**.", trans: "Sự đóng góp của anh ấy cho dự án là vô giá." },
+        { text: "Environmentalists **advocate** for the protection of marine life.", trans: "Các nhà môi trường học ủng hộ việc bảo vệ sinh vật biển." },
+        { text: "The results of the experiment were **anomalous** and unexpected.", trans: "Kết quả của cuộc thí nghiệm là bất thường và không mong đợi." },
+        { text: "The selection process seemed completely **arbitrary** to the applicants.", trans: "Quá trình lựa chọn dường như hoàn toàn tùy tiện đối với các ứng viên." },
+        { text: "Fluency in English is a major **asset** in today's job market.", trans: "Thông thạo tiếng Anh là một tài sản lớn trong thị trường việc làm ngày nay." },
+        { text: "He is an **assiduous** worker who never misses a detail.", trans: "Anh ấy là một nhân viên siêng năng, người không bao giờ bỏ lỡ một chi tiết nào." },
+        { text: "The company plans to **augment** its staff by hiring more experts.", trans: "Công ty có kế hoạch tăng cường nhân sự bằng cách thuê thêm chuyên gia." },
+        { text: "Local councils were given more **autonomy** to manage their budgets.", trans: "Các hội đồng địa phương đã được trao quyền tự chủ nhiều hơn để quản lý ngân sách." },
+        { text: "The billionaire is known for his **benevolent** donations to charity.", trans: "Vị tỷ phú nổi tiếng với những khoản quyên góp nhân từ cho từ thiện." },
+        { text: "I was completely **bewildered** by the complex instructions.", trans: "Tôi hoàn toàn bị bối rối bởi những chỉ dẫn phức tạp." },
+        { text: "To be **candid**, I don't think this plan will work.", trans: "Nói thẳng thắn thì tôi không nghĩ kế hoạch này sẽ hiệu quả." },
+        { text: "A **cohesive** team is essential for the success of any startup.", trans: "Một đội ngũ gắn kết là điều cần thiết cho sự thành công của bất kỳ khởi nghiệp nào." },
+        { text: "We are **cognizant** of the difficulties involved in this task.", trans: "Chúng tôi nhận thức rõ những khó khăn liên quan đến nhiệm vụ này." },
+        { text: "Salary should be **commensurate** with experience and skills.", trans: "Lương bổng nên tương xứng với kinh nghiệm và kỹ năng." },
+        { text: "We cannot afford to become **complacent** about our achievements.", trans: "Chúng ta không được phép trở nên tự mãn về những thành tựu của mình." },
+        { text: "Please keep your presentation **concise** and to the point.", trans: "Vui lòng giữ cho bài thuyết trình ngắn gọn và đi thẳng vào vấn đề." },
+        { text: "The school does not **condone** any form of bullying.", trans: "Nhà trường không bao dung cho bất kỳ hình thức bắt nạt nào." },
+        { text: "The quiet atmosphere is **conducive** to studying.", trans: "Bầu không khí yên tĩnh rất có lợi cho việc học tập." },
+        { text: "He is a **conscientious** student who always finishes his homework.", trans: "Cậu ấy là một học sinh tận tâm, luôn hoàn thành bài tập về nhà." },
+        { text: "The red tower is a **conspicuous** landmark in the city.", trans: "Tòa tháp đỏ là một cột mốc dễ thấy trong thành phố." },
+        { text: "Budget **constraints** prevented us from upgrading the equipment.", trans: "Những hạn chế về ngân sách đã ngăn cản chúng tôi nâng cấp thiết bị." },
+        { text: "She took a moment to **contemplate** her future career path.", trans: "Cô ấy dành một chút thời gian để suy ngẫm về con đường sự nghiệp tương lai." },
+        { text: "He preferred a **conventional** wedding over a modern one.", trans: "Anh ấy thích một đám cưới truyền thống hơn là một đám cưới hiện đại." },
+        { text: "The staff always gave us a **cordial** welcome at the hotel.", trans: "Nhân viên luôn dành cho chúng tôi sự chào đón nồng hậu tại khách sạn." },
+        { text: "Quality is the main **criterion** for selecting the winner.", trans: "Chất lượng là tiêu chí chính để lựa chọn người chiến thắng." },
+        { text: "The old filing system was **cumbersome** and slow.", trans: "Hệ thống lưu trữ cũ rất cồng kềnh và chậm chạp." },
+        { text: "The company had to **curtail** its spending due to the recession.", trans: "Công ty đã phải cắt giảm chi tiêu do suy thoái kinh tế." },
+        { text: "She felt **daunted** by the sheer amount of work ahead.", trans: "Cô cảm thấy nản lòng trước lượng công việc khổng lồ phía trước." },
+        { text: "The patient suffered from a **debilitating** illness for years.", trans: "Bệnh nhân đã phải chịu đựng một căn bệnh làm suy nhược trong nhiều năm." },
+        { text: "It was difficult to **decipher** his messy handwriting.", trans: "Rất khó để giải mã chữ viết tay cẩu thả của anh ta." },
+        { text: "He showed great **deference** to his elders.", trans: "Anh ấy thể hiện sự tôn trọng lớn đối với những người lớn tuổi." },
+        { text: "Vitamin **deficiency** can lead to various health problems.", trans: "Thiếu hụt vitamin có thể dẫn đến nhiều vấn đề sức khỏe khác nhau." },
+        { text: "Smoking has a **deleterious** effect on your lungs.", trans: "Hút thuốc có tác động có hại lên phổi của bạn." },
+        { text: "Her professional **demeanor** impressed the hiring manager.", trans: "Thái độ chuyên nghiệp của cô ấy đã gây ấn tượng với quản lý tuyển dụng." },
+        { text: "The community rose up to **denounce** the violent attacks.", trans: "Cộng đồng đã đứng lên để lên án các cuộc tấn công bạo lực." },
+        { text: "If we continue to **deplete** natural resources, we will face a crisis.", trans: "Nếu chúng ta tiếp tục làm cạn kiệt tài nguyên thiên nhiên, chúng ta sẽ đối mặt với khủng hoảng." },
+        { text: "Critics often **deride** his films for being too predictable.", trans: "Các nhà phê bình thường chế nhạo các bộ phim của ông vì quá dễ đoán." },
+        { text: "She grew **despondent** after failing the exam for the third time.", trans: "Cô ấy trở nên tuyệt vọng sau khi trượt kỳ thi lần thứ ba." },
+        { text: "Excessive sugar consumption is **detrimental** to your teeth.", trans: "Tiêu thụ quá nhiều đường có hại cho răng của bạn." },
+        { text: "Do not **deviate** from the path, or you might get lost.", trans: "Đừng đi chệch khỏi con đường, nếu không bạn có thể bị lạc." },
+        { text: "He is a **diligent** student who studies late every night.", trans: "Cậu ấy là một học sinh cần cù, học bài muộn mỗi đêm." },
+        { text: "The pain will **diminish** after you take the medicine.", trans: "Cơn đau sẽ giảm bớt sau khi bạn uống thuốc." },
+        { text: "There is a large **discrepancy** between the two reports.", trans: "Có một sự khác biệt lớn giữa hai bản báo cáo." },
+        { text: "The doctor was very **discreet** about the patient's condition.", trans: "Bác sĩ rất kín đáo về tình trạng của bệnh nhân." },
+        { text: "He looked at the cheap imitation with **disdain**.", trans: "Anh ấy nhìn món đồ giả rẻ tiền với sự khinh miệt." },
+        { text: "The mechanic had to **dismantle** the engine to find the fault.", trans: "Thợ máy đã phải tháo dỡ động cơ để tìm ra lỗi." },
+        { text: "The goal of the seminar is to **disseminate** new research findings.", trans: "Mục tiêu của cuộc hội thảo là phổ biến các kết quả nghiên cứu mới." },
+        { text: "The two friends took **divergent** paths after graduating.", trans: "Hai người bạn đã đi theo những con đường khác nhau sau khi tốt nghiệp." }
+
+    ];
+
+    let currentQuestions = [];
+
+    // Đọc file .docx
+    document.getElementById('file-upload').addEventListener('change', function(e) {
+        const reader = new FileReader();
+        reader.onload = function(event) {
+            mammoth.convertToHtml({arrayBuffer: event.target.result})
+                .then(result => { document.getElementById('input-area').innerHTML = result.value; });
+        };
+        reader.readAsArrayBuffer(this.files[0]);
+    });
+
+    function startExercise() {
+        const inputDiv = document.getElementById('input-area');
+        const extracted = [];
+        
+        // Trích xuất từ b, strong, u
+        const nodes = inputDiv.querySelectorAll('b, strong, u, span[style*="underline"]');
+        nodes.forEach(node => {
+            let word = node.innerText.trim();
+            let fullSentence = node.parentElement.innerText;
+            if(word.length > 1) {
+                extracted.push({ answer: word, text: fullSentence, trans: "Câu từ dữ liệu người dùng" });
+            }
+        });
+
+        // Trộn và lấy đủ 15 câu
+        let pool = [...extracted];
+        if(pool.length < 15) {
+            const extra = FALLBACK_DATA.sort(() => 0.5 - Math.random()).slice(0, 15 - pool.length);
+            extra.forEach(item => {
+                pool.push({
+                    answer: item.text.match(/\*\*(.*?)\*\*/)[1],
+                    text: item.text.replace(/\*\*/g, ''),
+                    trans: item.trans
+                });
+            });
+        }
+
+        currentQuestions = pool.slice(0, 15).sort(() => 0.5 - Math.random());
+        renderUI();
+    }
+
+    function renderUI() {
+        const list = document.getElementById('questions-list');
+        const bank = document.getElementById('bank-content');
+        list.innerHTML = '';
+        bank.innerHTML = '';
+
+        currentQuestions.forEach((q, idx) => {
+            const div = document.createElement('div');
+            div.className = 'sentence-card';
+            
+            // Tạo câu có ô trống
+            const blankHtml = `<span class="drop-zone" data-id="${idx}" onclick="removeWord(this)" ondrop="drop(event)" ondragover="allowDrop(event)"></span>`;
+            const regex = new RegExp(`\\b${q.answer}\\b`, 'i');
+            const sentenceHtml = q.text.replace(regex, blankHtml);
+
+            div.innerHTML = `<div class="q-number">${idx + 1}</div><div>${sentenceHtml}</div>`;
+            list.appendChild(div);
+        });
+
+        // Tạo Word Bank (luôn hiển thị toàn bộ)
+        const allWords = currentQuestions.map(q => q.answer).sort();
+        allWords.forEach((word, idx) => {
+            const span = document.createElement('span');
+            span.className = 'draggable-word';
+            span.innerText = word;
+            span.draggable = true;
+            span.id = `word-item-${idx}`;
+            span.ondragstart = drag;
+            bank.appendChild(span);
+        });
+
+        document.getElementById('setup-card').classList.add('hidden');
+        document.getElementById('exercise-view').classList.remove('hidden');
+    }
+
+    /* --- LOGIC KÉO THẢ & CLICK --- */
+    function allowDrop(ev) { ev.preventDefault(); }
+
+    function drag(ev) {
+        ev.dataTransfer.setData("textId", ev.target.id);
+        ev.dataTransfer.setData("word", ev.target.innerText);
+    }
+
+    function drop(ev) {
+        ev.preventDefault();
+        const word = ev.dataTransfer.getData("word");
+        const elementId = ev.dataTransfer.getData("textId");
+
+        // Nếu ô đã có từ, trả từ cũ về bank trước
+        if(ev.target.innerText !== "") {
+            toggleBankWord(ev.target.innerText, false);
+        }
+
+        ev.target.innerText = word;
+        toggleBankWord(word, true); // Làm mờ từ trong kho
+    }
+
+    // Nhấp vào ô trống để xóa từ
+    function removeWord(el) {
+        if(el.innerText !== "") {
+            toggleBankWord(el.innerText, false); // Hiện lại trong kho
+            el.innerText = "";
+        }
+    }
+
+    // Hàm ẩn/hiện từ trong kho
+    function toggleBankWord(word, isUsed) {
+        const bankWords = document.querySelectorAll('.draggable-word');
+        for(let bw of bankWords) {
+            if(bw.innerText === word && bw.classList.contains('used') === !isUsed) {
+                if(isUsed) bw.classList.add('used');
+                else bw.classList.remove('used');
+                break;
+            }
+        }
+    }
+
+    /* --- NỘP BÀI --- */
+    document.getElementById('submit-btn').onclick = function() {
+        let score = 0;
+        const resultContainer = document.getElementById('detailed-results');
+        resultContainer.innerHTML = '';
+
+        currentQuestions.forEach((q, idx) => {
+            const userAns = document.querySelector(`.drop-zone[data-id="${idx}"]`).innerText.trim();
+            const isCorrect = userAns.toLowerCase() === q.answer.toLowerCase();
+            if(isCorrect) score++;
+
+            const div = document.createElement('div');
+            div.className = 'sentence-card';
+            div.innerHTML = `
+                <div class="q-number">${idx + 1}</div>
+                <div style="width:100%">
+                    <p style="margin:0">
+                        ${isCorrect ? '✅' : '❌'} 
+                        ${q.text.replace(q.answer, `<span class="correct-ans">${q.answer}</span>`)}
+                    </p>
+                    <div class="feedback-box">
+                        <span>Đáp án của bạn: <span class="${isCorrect ? 'correct-ans' : 'wrong-ans'}">${userAns || "Trống"}</span></span>
+                        <small class="viet-sub">${q.trans}</small>
+                    </div>
+                </div>
+            `;
+            resultContainer.appendChild(div);
+        });
+
+        const percent = Math.round((score / 15) * 100);
+        document.getElementById('score-text').innerText = `Kết quả: ${score}/15 (${percent}%)`;
+        document.getElementById('exercise-view').classList.add('hidden');
+        document.getElementById('result-view').classList.remove('hidden');
+        window.scrollTo(0,0);
+    };
+</script>
+
+</body>
+</html>
