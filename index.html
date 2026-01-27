@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Sentences with Be Heard</title>
+    <title>Be Heard - English Mastery</title>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/mammoth/1.6.0/mammoth.browser.min.js"></script>
     <link href="https://fonts.googleapis.com/css2?family=Quicksand:wght@400;600;700&display=swap" rel="stylesheet">
     <style>
@@ -26,6 +26,14 @@
             line-height: 1.6;
         }
 
+        #site-logo {
+            position: fixed;
+            top: 15px;
+            left: 20px;
+            width: 60px;
+            z-index: 1100;
+        }
+
         .container { max-width: 1100px; margin: 0 auto; padding: 20px; }
 
         header {
@@ -33,7 +41,7 @@
             padding: 40px 20px;
             background: linear-gradient(135deg, var(--primary), #051aab);
             color: white;
-            border-radius: 0 0 50px 50px;
+            border-radius: 0 0 40px 40px;
             margin-bottom: 30px;
             box-shadow: 0 10px 20px rgba(0,0,0,0.1);
         }
@@ -41,7 +49,7 @@
         /* --- Input Section --- */
         .card {
             background: white;
-            padding: 30px;
+            padding: 25px;
             border-radius: 25px;
             box-shadow: 0 8px 25px rgba(0,0,0,0.05);
             margin-bottom: 30px;
@@ -49,7 +57,7 @@
 
         #input-area {
             width: 100%;
-            min-height: 150px;
+            min-height: 120px;
             border: 2px dashed #cbd5e0;
             border-radius: 15px;
             padding: 15px;
@@ -59,35 +67,27 @@
             box-sizing: border-box;
         }
 
-        #input-area:focus { border-color: var(--primary); background: #fcfdff; }
-
-        .btn-group { display: flex; gap: 15px; flex-wrap: wrap; }
+        .btn-group { display: flex; gap: 10px; flex-wrap: wrap; justify-content: center; }
 
         button {
             background-color: var(--primary);
             color: white;
             border: none;
-            padding: 12px 28px;
+            padding: 12px 25px;
             border-radius: 50px;
             cursor: pointer;
             font-weight: 700;
             transition: all 0.3s ease;
         }
 
-        button:hover { transform: translateY(-2px); box-shadow: 0 5px 15px rgba(0,17,132,0.3); }
         .btn-alt { background-color: var(--accent); }
 
-        /* --- Exercise Layout --- */
+        /* --- Layout chính --- */
         .main-layout {
             display: grid;
-            grid-template-columns: 1fr 300px;
-            gap: 30px;
-            position: relative;
-        }
-
-        @media (max-width: 900px) {
-            .main-layout { grid-template-columns: 1fr; }
-            .word-bank-container { position: static !important; }
+            grid-template-columns: 1fr 320px;
+            gap: 25px;
+            margin-bottom: 50px;
         }
 
         .sentence-card {
@@ -97,25 +97,27 @@
             border-radius: 18px;
             display: flex;
             align-items: flex-start;
-            gap: 15px;
-            box-shadow: 0 4px 12px rgba(0,0,0,0.03);
+            gap: 12px;
+            box-shadow: 0 4px 10px rgba(0,0,0,0.03);
+            border: 1px solid #f0f0f0;
         }
 
         .q-number {
-            background: var(--secondary);
-            color: var(--primary);
+            background: var(--primary);
+            color: white;
             font-weight: 700;
-            min-width: 35px;
-            height: 35px;
+            min-width: 30px;
+            height: 30px;
             display: flex;
             align-items: center;
             justify-content: center;
             border-radius: 50%;
+            font-size: 0.85rem;
         }
 
         .drop-zone {
             display: inline-block;
-            min-width: 120px;
+            min-width: 100px;
             border-bottom: 2px solid var(--primary);
             margin: 0 5px;
             text-align: center;
@@ -123,98 +125,124 @@
             color: var(--primary);
             cursor: pointer;
             background: #f0f3ff;
-            border-radius: 8px 8px 0 0;
+            border-radius: 5px 5px 0 0;
             padding: 2px 8px;
-            height: 28px;
+            min-height: 24px;
             vertical-align: bottom;
-            transition: background 0.2s;
         }
 
-        .drop-zone:hover { background: #e0e7ff; }
-
-        /* --- Sticky Word Bank --- */
+        /* --- KHO TỪ VỰNG: LUÔN HIỂN THỊ --- */
         .word-bank-container {
             position: sticky;
             top: 20px;
             height: fit-content;
+            z-index: 1000;
         }
 
         .word-bank {
             background: white;
-            padding: 20px;
-            border-radius: 25px;
+            padding: 15px;
+            border-radius: 20px;
             border: 2px solid var(--secondary);
-            box-shadow: 0 10px 25px rgba(0,0,0,0.05);
+            box-shadow: 0 10px 25px rgba(0,0,0,0.1);
         }
 
-        .word-bank h3 { margin-top: 0; color: var(--primary); font-size: 1.2rem; text-align: center; }
+        .word-bank h3 { 
+            margin: 0 0 10px 0; 
+            font-size: 1rem; 
+            text-align: center; 
+            color: var(--primary);
+            border-bottom: 1px solid #eee;
+            padding-bottom: 5px;
+        }
 
         .draggable-word {
             display: inline-block;
-            background: white;
-            padding: 8px 16px;
-            margin: 6px;
-            border-radius: 12px;
+            background: #fff;
+            padding: 6px 12px;
+            margin: 4px;
+            border-radius: 10px;
             cursor: grab;
-            border: 1px solid #e2e8f0;
-            box-shadow: 0 2px 5px rgba(0,0,0,0.05);
+            border: 1px solid #d1d5db;
             font-weight: 600;
-            transition: all 0.2s;
-        }
-
-        .draggable-word.used {
-            opacity: 0.3;
-            cursor: not-allowed;
-            pointer-events: none;
-            background: #f1f5f9;
-        }
-
-        /* --- Feedback --- */
-        .feedback-box { margin-top: 10px; border-top: 1px solid #eee; padding-top: 10px; font-size: 0.95rem; }
-        .viet-sub { color: #636e72; font-style: italic; display: block; margin-top: 4px; }
-        .correct-ans { color: var(--success); font-weight: 700; }
-        .wrong-ans { color: var(--error); text-decoration: line-through; margin-right: 5px; }
-        
-        .score-banner {
-            font-size: 2rem;
-            text-align: center;
+            font-size: 0.85rem;
             color: var(--primary);
-            margin-bottom: 30px;
+            touch-action: none; /* Tối ưu cho cảm ứng */
         }
 
+        .draggable-word.used { opacity: 0.2; pointer-events: none; }
+
+        /* --- ĐÁP ỨNG TRÊN DI ĐỘNG (MOBILE & TABLET) --- */
+        @media (max-width: 900px) {
+            .main-layout { 
+                grid-template-columns: 1fr; 
+                margin-bottom: 180px; /* Chừa chỗ cho thanh từ vựng cố định bên dưới */
+            }
+
+            .word-bank-container {
+                position: fixed;
+                top: auto;
+                bottom: 0;
+                left: 0;
+                width: 100%;
+                background: white;
+                box-shadow: 0 -5px 20px rgba(0,0,0,0.15);
+                border-radius: 25px 25px 0 0;
+                padding: 10px 0;
+            }
+
+            .word-bank {
+                border: none;
+                box-shadow: none;
+                max-height: 150px;
+                overflow-y: auto;
+                padding: 10px 15px;
+            }
+
+            #site-logo { width: 45px; top: 10px; left: 10px; }
+            header h1 { font-size: 1.4rem; }
+        }
+
+        /* Results UI */
+        .feedback-box { margin-top: 10px; border-top: 1px dashed #ddd; padding-top: 8px; }
+        .viet-sub { color: #636e72; font-style: italic; font-size: 0.9rem; }
+        .correct-ans { color: var(--success); font-weight: 700; }
+        .wrong-ans { color: var(--error); text-decoration: line-through; }
+        .score-banner { font-size: 2rem; text-align: center; color: var(--primary); font-weight: 700; margin-bottom: 20px; }
         .hidden { display: none; }
     </style>
 </head>
 <body>
 
+<img id="site-logo" src="https://i.imgur.com/8n8fX3Y.png" alt="Logo" onerror="this.style.display='none'">
+
 <header>
-    <h1>Học từ qua câu cùng Be Heard</h1>
-    <p>Kéo thả từ vào ô trống hoặc nhấp vào ô để hủy chọn</p>
+    <h1>BE HEARD - VOCAB CHALLENGE</h1>
+    <p>Tải lên danh sách câu hoặc dán câu vào bên dưới. In đậm hoặc gạch chân từ vựng cần học</p>
 </header>
 
 <div class="container">
     <div id="setup-card" class="card">
-        <div id="input-area" contenteditable="true" placeholder="Dán văn bản có từ In đậm (Bold) hoặc Gạch chân (Underline) vào đây..."></div>
+        <div id="input-area" contenteditable="true" placeholder="Dán văn bản hoặc để trống để dùng kho 100 câu có sẵn..."></div>
         <div class="btn-group">
             <input type="file" id="file-upload" accept=".docx" style="display:none">
-            <button onclick="document.getElementById('file-upload').click()">📁 Tải file .docx</button>
-            <button class="btn-alt" onclick="startExercise()">🎯 Bắt đầu làm bài</button>
+            <button onclick="document.getElementById('file-upload').click()">📁 File Word</button>
+            <button class="btn-alt" onclick="startExercise()">🎯 Bắt đầu</button>
         </div>
     </div>
 
     <div id="exercise-view" class="hidden">
         <div class="main-layout">
             <div id="questions-list"></div>
-            
             <div class="word-bank-container">
                 <div class="word-bank">
-                    <h3>Kho từ vựng</h3>
+                    <h3>KHO TỪ VỰNG</h3>
                     <div id="bank-content"></div>
                 </div>
             </div>
         </div>
-        <div style="text-align: center; margin-top: 40px;">
-            <button id="submit-btn" style="padding: 15px 60px; font-size: 1.2rem;">Nộp bài</button>
+        <div style="text-align: center; margin: 40px 0;">
+            <button id="submit-btn" style="padding: 15px 60px; font-size: 1.2rem;">Nộp Bài</button>
         </div>
     </div>
 
@@ -222,14 +250,15 @@
         <div id="score-text" class="score-banner"></div>
         <div id="detailed-results"></div>
         <div style="text-align: center; margin-top: 30px;">
-            <button onclick="location.reload()">Làm bài mới</button>
+            <button onclick="location.reload()" style="background: var(--accent)">Làm bài mới</button>
         </div>
     </div>
 </div>
 
 <script>
-    /** --- CẤU HÌNH NGÂN HÀNG CÂU HỎI DỰ PHÒNG --- */
+    // DỮ LIỆU 100 CÂU (Tóm gọn để code chạy mượt)
     const FALLBACK_DATA = [
+        // 50 CÂU ĐẦU TIÊN
         { text: "The team had to **collaborate** closely to meet the project deadline.", trans: "Nhóm đã phải hợp tác chặt chẽ để kịp thời hạn dự án." },
         { text: "Her **meticulous** planning ensured the event was a huge success.", trans: "Sự lập kế hoạch tỉ mỉ của cô ấy đã đảm bảo sự kiện thành công rực rỡ." },
         { text: "Scientists are trying to **ascertain** the cause of the phenomenon.", trans: "Các nhà khoa học đang cố gắng xác định nguyên nhân của hiện tượng này." },
@@ -331,12 +360,11 @@
         { text: "The mechanic had to **dismantle** the engine to find the fault.", trans: "Thợ máy đã phải tháo dỡ động cơ để tìm ra lỗi." },
         { text: "The goal of the seminar is to **disseminate** new research findings.", trans: "Mục tiêu của cuộc hội thảo là phổ biến các kết quả nghiên cứu mới." },
         { text: "The two friends took **divergent** paths after graduating.", trans: "Hai người bạn đã đi theo những con đường khác nhau sau khi tốt nghiệp." }
-
     ];
 
     let currentQuestions = [];
 
-    // Đọc file .docx
+    // Tải file DOCX
     document.getElementById('file-upload').addEventListener('change', function(e) {
         const reader = new FileReader();
         reader.onload = function(event) {
@@ -348,113 +376,89 @@
 
     function startExercise() {
         const inputDiv = document.getElementById('input-area');
-        const extracted = [];
-        
-        // Trích xuất từ b, strong, u
+        let extracted = [];
         const nodes = inputDiv.querySelectorAll('b, strong, u, span[style*="underline"]');
+        
         nodes.forEach(node => {
             let word = node.innerText.trim();
             let fullSentence = node.parentElement.innerText;
-            if(word.length > 1) {
-                extracted.push({ answer: word, text: fullSentence, trans: "Câu từ dữ liệu người dùng" });
-            }
+            if(word.length > 1) extracted.push({ answer: word, text: fullSentence, trans: "Tài liệu tải lên" });
         });
 
-        // Trộn và lấy đủ 15 câu
         let pool = [...extracted];
         if(pool.length < 15) {
-            const extra = FALLBACK_DATA.sort(() => 0.5 - Math.random()).slice(0, 15 - pool.length);
+            const extra = FALLBACK_DATA.sort(() => 0.5 - Math.random());
             extra.forEach(item => {
-                pool.push({
-                    answer: item.text.match(/\*\*(.*?)\*\*/)[1],
-                    text: item.text.replace(/\*\*/g, ''),
-                    trans: item.trans
-                });
+                const target = item.text.match(/\*\*(.*?)\*\*/)[1];
+                pool.push({ answer: target, text: item.text.replace(/\*\*/g, ''), trans: item.trans });
             });
         }
 
-        currentQuestions = pool.slice(0, 15).sort(() => 0.5 - Math.random());
+        currentQuestions = pool.sort(() => 0.5 - Math.random()).slice(0, 15);
         renderUI();
     }
 
     function renderUI() {
         const list = document.getElementById('questions-list');
         const bank = document.getElementById('bank-content');
-        list.innerHTML = '';
-        bank.innerHTML = '';
+        list.innerHTML = ''; bank.innerHTML = '';
 
         currentQuestions.forEach((q, idx) => {
             const div = document.createElement('div');
             div.className = 'sentence-card';
-            
-            // Tạo câu có ô trống
             const blankHtml = `<span class="drop-zone" data-id="${idx}" onclick="removeWord(this)" ondrop="drop(event)" ondragover="allowDrop(event)"></span>`;
-            const regex = new RegExp(`\\b${q.answer}\\b`, 'i');
-            const sentenceHtml = q.text.replace(regex, blankHtml);
-
-            div.innerHTML = `<div class="q-number">${idx + 1}</div><div>${sentenceHtml}</div>`;
+            const regex = new RegExp(`\\b${q.answer}\\b`, 'gi');
+            div.innerHTML = `<div class="q-number">${idx + 1}</div><div>${q.text.replace(regex, blankHtml)}</div>`;
             list.appendChild(div);
         });
 
-        // Tạo Word Bank (luôn hiển thị toàn bộ)
-        const allWords = currentQuestions.map(q => q.answer).sort();
+        // Xáo trộn từ vựng trong kho
+        const allWords = currentQuestions.map(q => q.answer).sort(() => Math.random() - 0.5);
         allWords.forEach((word, idx) => {
             const span = document.createElement('span');
             span.className = 'draggable-word';
             span.innerText = word;
             span.draggable = true;
-            span.id = `word-item-${idx}`;
+            span.id = `word-${idx}`;
             span.ondragstart = drag;
             bank.appendChild(span);
         });
 
         document.getElementById('setup-card').classList.add('hidden');
         document.getElementById('exercise-view').classList.remove('hidden');
+        window.scrollTo(0,0);
     }
 
-    /* --- LOGIC KÉO THẢ & CLICK --- */
+    // Logic Kéo Thả & Click
     function allowDrop(ev) { ev.preventDefault(); }
-
-    function drag(ev) {
-        ev.dataTransfer.setData("textId", ev.target.id);
-        ev.dataTransfer.setData("word", ev.target.innerText);
-    }
+    function drag(ev) { ev.dataTransfer.setData("word", ev.target.innerText); }
 
     function drop(ev) {
         ev.preventDefault();
         const word = ev.dataTransfer.getData("word");
-        const elementId = ev.dataTransfer.getData("textId");
-
-        // Nếu ô đã có từ, trả từ cũ về bank trước
-        if(ev.target.innerText !== "") {
-            toggleBankWord(ev.target.innerText, false);
-        }
-
+        if(ev.target.innerText !== "") toggleBankWord(ev.target.innerText, false);
         ev.target.innerText = word;
-        toggleBankWord(word, true); // Làm mờ từ trong kho
+        toggleBankWord(word, true);
     }
 
-    // Nhấp vào ô trống để xóa từ
     function removeWord(el) {
         if(el.innerText !== "") {
-            toggleBankWord(el.innerText, false); // Hiện lại trong kho
+            toggleBankWord(el.innerText, false);
             el.innerText = "";
         }
     }
 
-    // Hàm ẩn/hiện từ trong kho
     function toggleBankWord(word, isUsed) {
         const bankWords = document.querySelectorAll('.draggable-word');
         for(let bw of bankWords) {
             if(bw.innerText === word && bw.classList.contains('used') === !isUsed) {
-                if(isUsed) bw.classList.add('used');
-                else bw.classList.remove('used');
+                isUsed ? bw.classList.add('used') : bw.classList.remove('used');
                 break;
             }
         }
     }
 
-    /* --- NỘP BÀI --- */
+    // Nộp bài
     document.getElementById('submit-btn').onclick = function() {
         let score = 0;
         const resultContainer = document.getElementById('detailed-results');
@@ -470,21 +474,17 @@
             div.innerHTML = `
                 <div class="q-number">${idx + 1}</div>
                 <div style="width:100%">
-                    <p style="margin:0">
-                        ${isCorrect ? '✅' : '❌'} 
-                        ${q.text.replace(q.answer, `<span class="correct-ans">${q.answer}</span>`)}
-                    </p>
+                    <p style="margin:0">${isCorrect ? '✅' : '❌'} ${q.text.replace(new RegExp(`\\b${q.answer}\\b`, 'gi'), `<span class="correct-ans">${q.answer}</span>`)}</p>
                     <div class="feedback-box">
-                        <span>Đáp án của bạn: <span class="${isCorrect ? 'correct-ans' : 'wrong-ans'}">${userAns || "Trống"}</span></span>
-                        <small class="viet-sub">${q.trans}</small>
+                        <span>Lựa chọn: <span class="${isCorrect ? 'correct-ans' : 'wrong-ans'}">${userAns || "Trống"}</span></span>
+                        <br><small class="viet-sub">${q.trans}</small>
                     </div>
                 </div>
             `;
             resultContainer.appendChild(div);
         });
 
-        const percent = Math.round((score / 15) * 100);
-        document.getElementById('score-text').innerText = `Kết quả: ${score}/15 (${percent}%)`;
+        document.getElementById('score-text').innerText = `KẾT QUẢ: ${score}/15`;
         document.getElementById('exercise-view').classList.add('hidden');
         document.getElementById('result-view').classList.remove('hidden');
         window.scrollTo(0,0);
