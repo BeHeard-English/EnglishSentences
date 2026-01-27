@@ -24,7 +24,6 @@
             margin: 0;
             padding: 0;
             line-height: 1.6;
-            /* Ngăn kéo trang khi kéo từ trên mobile */
             overscroll-behavior: none; 
         }
 
@@ -79,7 +78,7 @@
         /* --- Layout --- */
         .main-layout {
             display: grid;
-            grid-template-columns: 1fr 320px;
+            grid-template-columns: 1fr 320px; /* Cột trái: Câu hỏi + Nút nộp, Cột phải: Kho từ */
             gap: 25px;
             margin-bottom: 50px;
         }
@@ -126,8 +125,6 @@
             transition: all 0.2s;
         }
         
-        .drop-zone.hovered { background: #dbe2ff; border-color: var(--accent); }
-
         /* --- Word Bank Styles --- */
         .word-bank-container {
             position: sticky;
@@ -159,12 +156,12 @@
             padding: 8px 14px;
             margin: 4px;
             border-radius: 12px;
-            cursor: grab; /* Con trỏ hình bàn tay */
+            cursor: grab;
             border: 1px solid #d1d5db;
             font-weight: 600;
             font-size: 0.9rem;
             color: var(--primary);
-            touch-action: none; /* QUAN TRỌNG: Tắt sự kiện cuộn mặc định của trình duyệt trên từ này */
+            touch-action: none; 
             user-select: none;
             -webkit-user-select: none;
         }
@@ -176,10 +173,9 @@
             border-color: transparent;
         }
 
-        /* --- CSS cho BẢN SAO KHI ĐANG KÉO (Mobile & Desktop) --- */
         .dragging-clone {
-            position: fixed; /* Luôn nổi trên cùng */
-            pointer-events: none; /* Để click xuyên qua nó xuống ô trống bên dưới */
+            position: fixed;
+            pointer-events: none;
             z-index: 9999;
             background: var(--accent);
             color: white;
@@ -195,8 +191,15 @@
         /* --- Mobile Responsive --- */
         @media (max-width: 900px) {
             .main-layout { 
-                grid-template-columns: 1fr; 
-                margin-bottom: 220px; 
+                grid-template-columns: 1fr; /* Chỉ còn 1 cột */
+                margin-bottom: 0;
+            }
+
+            /* Container chứa nút nộp bài */
+            #submit-container {
+                margin-top: 20px;
+                margin-bottom: 250px; /* QUAN TRỌNG: Tạo khoảng trống lớn bên dưới nút nộp để đẩy nó lên trên kho từ vựng */
+                text-align: center;
             }
 
             .word-bank-container {
@@ -221,6 +224,7 @@
             }
         }
 
+        /* Ẩn hiện các view */
         .hidden { display: none; }
         .viet-sub { font-style: italic; color: #666; font-size: 0.9rem; display: block; margin-top: 5px;}
         .correct-ans { color: var(--success); font-weight: bold; }
@@ -231,7 +235,7 @@
 <body>
 
 <header>
-    <h1>VOCABULARY CHALLENGE WITH BE HEARD</h1>
+    <h1>Học cùng Be Heard</h1>
     <p>Tải lên danh sách câu có in đậm hoặc gạch chân từ vựng cần học</p>
 </header>
 
@@ -247,16 +251,20 @@
 
     <div id="exercise-view" class="hidden">
         <div class="main-layout">
-            <div id="questions-list"></div>
+            <div class="question-column">
+                <div id="questions-list"></div>
+                
+                <div id="submit-container" style="text-align: center; margin-top: 30px;">
+                    <button id="submit-btn" style="padding: 15px 80px; font-size: 1.2rem; border-radius: 100px; box-shadow: 0 10px 20px rgba(0,17,132,0.2);">Nộp Bài</button>
+                </div>
+            </div>
+
             <div class="word-bank-container">
                 <div class="word-bank">
-                    <h3>KHO TỪ VỰNG</h3>
+                    <h3>KHO TỪ VỰNG (Kéo thả)</h3>
                     <div id="bank-content"></div>
                 </div>
             </div>
-        </div>
-        <div style="text-align: center; margin: 40px 0;">
-            <button id="submit-btn" style="padding: 15px 80px; font-size: 1.2rem; border-radius: 100px; box-shadow: 0 10px 20px rgba(0,17,132,0.2);">Nộp Bài</button>
         </div>
     </div>
 
@@ -271,11 +279,10 @@
 
 <script>
     // ============================================================
-    // VÙNG DỮ LIỆU CỦA BẠN - HÃY DÁN 100 CÂU VÀO DƯỚI ĐÂY
+    // VÙNG DỮ LIỆU CỦA BẠN - DÁN VÀO ĐÂY
     // ============================================================
     const FALLBACK_DATA = [
-       
-        { text: "The team had to **collaborate** closely to meet the project deadline.", trans: "Nhóm đã phải hợp tác chặt chẽ để kịp thời hạn dự án." },
+       { text: "The team had to **collaborate** closely to meet the project deadline.", trans: "Nhóm đã phải hợp tác chặt chẽ để kịp thời hạn dự án." },
         { text: "Her **meticulous** planning ensured the event was a huge success.", trans: "Sự lập kế hoạch tỉ mỉ của cô ấy đã đảm bảo sự kiện thành công rực rỡ." },
         { text: "Scientists are trying to **ascertain** the cause of the phenomenon.", trans: "Các nhà khoa học đang cố gắng xác định nguyên nhân của hiện tượng này." },
         { text: "The new law will **implement** stricter rules on waste disposal.", trans: "Luật mới sẽ thực thi các quy định nghiêm ngặt hơn về việc đổ rác thải." },
@@ -376,7 +383,6 @@
         { text: "The mechanic had to **dismantle** the engine to find the fault.", trans: "Thợ máy đã phải tháo dỡ động cơ để tìm ra lỗi." },
         { text: "The goal of the seminar is to **disseminate** new research findings.", trans: "Mục tiêu của cuộc hội thảo là phổ biến các kết quả nghiên cứu mới." },
         { text: "The two friends took **divergent** paths after graduating.", trans: "Hai người bạn đã đi theo những con đường khác nhau sau khi tốt nghiệp." }
-
     ]; 
     // ============================================================
 
@@ -430,7 +436,6 @@
         currentQuestions.forEach((q, idx) => {
             const div = document.createElement('div');
             div.className = 'sentence-card';
-            // Drop zone cũng hỗ trợ click để xóa
             const blankHtml = `<span class="drop-zone" data-id="${idx}" onclick="clearZone(this)"></span>`;
             const regex = new RegExp(`\\b${escapeRegExp(q.answer)}\\b`, 'gi');
             div.innerHTML = `<div class="q-number">${idx + 1}</div><div style="width:100%">${q.text.replace(regex, blankHtml)}</div>`;
@@ -442,8 +447,7 @@
             const span = document.createElement('span');
             span.className = 'draggable-word';
             span.innerText = word;
-            // Gán sự kiện kéo thả thủ công
-            initMobileDrag(span);
+            initMobileDrag(span); // Kích hoạt kéo thả xịn
             bank.appendChild(span);
         });
 
@@ -456,30 +460,24 @@
         if(zone.innerText !== "") {
             toggleBankWord(zone.innerText, false);
             zone.innerText = "";
-            zone.style.backgroundColor = ""; // Reset màu
         }
     }
 
-    // --- CƠ CHẾ KÉO THẢ "FAKE" CHO MOBILE & DESKTOP (SIÊU NHẠY) ---
-    // Thay vì dùng HTML5 Drag, ta dùng Touch/Mouse Events để di chuyển 1 bản sao (Clone)
-    
-    let activeClone = null; // Bản sao đang bay theo ngón tay
-    let activeSource = null; // Từ gốc trong kho
+    // --- CƠ CHẾ KÉO THẢ NHANH (TOUCH EVENT) ---
+    let activeClone = null;
+    let activeSource = null;
     let touchOffsetX = 0;
     let touchOffsetY = 0;
 
     function initMobileDrag(el) {
-        // Hỗ trợ cả chuột (Desktop) và cảm ứng (Mobile)
         el.addEventListener('touchstart', handleDragStart, {passive: false});
         el.addEventListener('mousedown', handleDragStart);
     }
 
     function handleDragStart(e) {
         if (e.target.classList.contains('used')) return;
+        e.preventDefault(); 
         
-        e.preventDefault(); // Chặn cuộn trang ngay lập tức
-        
-        // Xác định toạ độ bắt đầu (Chuột hoặc Ngón tay)
         let clientX, clientY;
         if (e.type === 'touchstart') {
             clientX = e.touches[0].clientX;
@@ -490,22 +488,19 @@
         }
 
         activeSource = e.target;
-        
-        // Tạo bản sao để bay theo ngón tay
         activeClone = activeSource.cloneNode(true);
         activeClone.classList.add('dragging-clone');
-        // Tính toán để ngón tay nằm giữa từ
+        
         const rect = activeSource.getBoundingClientRect();
         touchOffsetX = clientX - rect.left;
         touchOffsetY = clientY - rect.top;
 
         activeClone.style.left = (clientX - touchOffsetX) + 'px';
         activeClone.style.top = (clientY - touchOffsetY) + 'px';
-        activeClone.style.width = rect.width + 'px'; // Giữ nguyên kích thước
+        activeClone.style.width = rect.width + 'px';
         
         document.body.appendChild(activeClone);
 
-        // Lắng nghe sự kiện di chuyển và nhả ra trên toàn màn hình
         if (e.type === 'touchstart') {
             document.addEventListener('touchmove', handleDragMove, {passive: false});
             document.addEventListener('touchend', handleDragEnd);
@@ -517,8 +512,7 @@
 
     function handleDragMove(e) {
         if (!activeClone) return;
-        e.preventDefault(); // Chặn cuộn trang khi đang kéo
-
+        e.preventDefault();
         let clientX, clientY;
         if (e.type === 'touchmove') {
             clientX = e.touches[0].clientX;
@@ -527,19 +521,14 @@
             clientX = e.clientX;
             clientY = e.clientY;
         }
-
-        // Cập nhật vị trí bản sao
-        activeClone.style.left = (clientX - activeClone.offsetWidth / 2) + 'px'; // Căn giữa ngón tay
+        activeClone.style.left = (clientX - activeClone.offsetWidth / 2) + 'px';
         activeClone.style.top = (clientY - activeClone.offsetHeight / 2) + 'px';
     }
 
     function handleDragEnd(e) {
         if (!activeClone) return;
-
-        // Xác định vị trí thả
         let clientX, clientY;
         if (e.type === 'touchend') {
-            // Touchend không có touches, lấy từ changedTouches
             clientX = e.changedTouches[0].clientX;
             clientY = e.changedTouches[0].clientY;
         } else {
@@ -547,34 +536,21 @@
             clientY = e.clientY;
         }
 
-        // Ẩn bản sao tạm thời để "nhìn xuyên" xuống dưới xem có drop-zone nào không
         activeClone.style.display = 'none';
         let elementBelow = document.elementFromPoint(clientX, clientY);
         activeClone.style.display = 'block';
 
-        // Tìm xem cái dưới ngón tay có phải là Drop Zone không
-        // (Hoặc là con của Drop zone, trường hợp drop vào chữ)
         let dropZone = elementBelow ? elementBelow.closest('.drop-zone') : null;
 
         if (dropZone) {
-            // -- LOGIC THẢ THÀNH CÔNG --
-            
-            // 1. Nếu zone đã có chữ -> Trả chữ cũ về kho
-            if (dropZone.innerText !== "") {
-                toggleBankWord(dropZone.innerText, false);
-            }
-
-            // 2. Điền từ mới vào
+            if (dropZone.innerText !== "") toggleBankWord(dropZone.innerText, false);
             dropZone.innerText = activeSource.innerText;
             toggleBankWord(activeSource.innerText, true);
         }
 
-        // Dọn dẹp
         activeClone.remove();
         activeClone = null;
         activeSource = null;
-
-        // Gỡ sự kiện toàn cục
         document.removeEventListener('touchmove', handleDragMove);
         document.removeEventListener('touchend', handleDragEnd);
         document.removeEventListener('mousemove', handleDragMove);
