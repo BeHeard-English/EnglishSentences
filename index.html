@@ -7,6 +7,7 @@
     <script src="https://cdnjs.cloudflare.com/ajax/libs/mammoth/1.6.0/mammoth.browser.min.js"></script>
     <link href="https://fonts.googleapis.com/css2?family=Quicksand:wght@400;600;700&display=swap" rel="stylesheet">
     <style>
+        /* CSS giữ nguyên */
         :root {
             --primary: #001184;
             --secondary: #eef2ff;
@@ -361,22 +362,121 @@
         const reader = new FileReader();
         reader.onload = function(event) {
             mammoth.convertToHtml({arrayBuffer: event.target.result})
-                .then(result => { document.getElementById('input-area').innerHTML = result.value; });
+                .then(result => { 
+                    document.getElementById('input-area').innerHTML = result.value; 
+                });
         };
         reader.readAsArrayBuffer(this.files[0]);
     });
 
+    // Hàm loại bỏ số thứ tự và bullet points
+    function cleanText(text) {
+        // Loại bỏ số thứ tự (1., 2., 3., ...), bullet (•, -, *, ◦) ở đầu dòng
+        return text.replace(/^(\s*[\d]+[\.\)]\s*|\s*[•\-*◦]\s*)/, '').trim();
+    }
+
+    // Hàm trích xuất từ được định dạng từ nhiều nguồn
+    function extractFormattedWords(node) {
+        const words = [];
+        
+        // Phát hiện nhiều loại định dạng
+        const selectors = [
+            'b', 'strong', 
+            'u', 'ins',
+            'span[style*="font-weight:bold"]',
+            'span[style*="font-weight: bold"]',
+            'span[style*="text-decoration:underline"]',
+            'span[style*="text-decoration: underline"]',
+            'em[style*="font-weight:bold"]',
+            'i[style*="font-weight:bold"]'
+        ];
+        
+        // Kiểm tra trực tiếp style của node
+        function isStyled(node) {
+            if (node.nodeType !== Node.ELEMENT_NODE) return false;
+            const style = window.getComputedStyle(node);
+            return style.fontWeight === '700' || 
+                   style.fontWeight === 'bold' || 
+                   style.textDecoration.includes('underline') ||
+                   node.style.fontWeight === 'bold' ||
+                   node.style.textDecoration === 'underline';
+        }
+        
+        // Duyệt qua tất cả các node con
+        function traverseNodes(currentNode) {
+            if (currentNode.nodeType === Node.ELEMENT_NODE) {
+                // Kiểm tra nếu node có định dạng
+                if (selectors.some(sel => currentNode.matches(sel)) || isStyled(currentNode)) {
+                    const word = currentNode.textContent.trim();
+                    if (word.length > 0) {
+                        words.push({
+                            word: word,
+                            node: currentNode,
+                            parent: currentNode.parentElement
+                        });
+                    }
+                    return; // Không duyệt sâu hơn nếu đã tìm thấy định dạng
+                }
+                
+                // Duyệt qua các node con
+                for (let child of currentNode.childNodes) {
+                    traverseNodes(child);
+                }
+            }
+        }
+        
+        traverseNodes(node);
+        return words;
+    }
+
     function startExercise() {
         const inputDiv = document.getElementById('input-area');
         let extracted = [];
-        const nodes = inputDiv.querySelectorAll('b, strong, u, span[style*="underline"]');
         
-        nodes.forEach(node => {
-            let word = node.innerText.trim();
-            let fullSentence = node.parentElement.innerText;
-            if(word.length > 1) extracted.push({ answer: word, text: fullSentence, trans: "Tài liệu tải lên" });
-        });
-
+        // Xử lý từng đoạn văn bản (dựa trên thẻ p, div, hoặc xuống dòng)
+        const paragraphs = inputDiv.querySelectorAll('p, div, br');
+        
+        if (paragraphs.length > 0) {
+            paragraphs.forEach(para => {
+                const formattedWords = extractFormattedWords(para);
+                if (formattedWords.length > 0) {
+                    formattedWords.forEach(item => {
+                        let fullSentence = para.textContent || para.innerText;
+                        fullSentence = cleanText(fullSentence);
+                        if (item.word.length > 1 && fullSentence.length > 0) {
+                            extracted.push({ 
+                                answer: item.word, 
+                                text: fullSentence, 
+                                trans: "Tài liệu tải lên" 
+                            });
+                        }
+                    });
+                }
+            });
+        } else {
+            // Nếu không có thẻ HTML, xử lý toàn bộ nội dung
+            const formattedWords = extractFormattedWords(inputDiv);
+            if (formattedWords.length > 0) {
+                // Tách thành các câu dựa trên dấu câu
+                const fullText = inputDiv.textContent || inputDiv.innerText;
+                const sentences = fullText.split(/[.!?]/).filter(s => s.trim().length > 0);
+                
+                sentences.forEach(sentence => {
+                    const cleanedSentence = cleanText(sentence);
+                    // Tìm từ được định dạng trong câu này
+                    formattedWords.forEach(item => {
+                        if (cleanedSentence.includes(item.word)) {
+                            extracted.push({ 
+                                answer: item.word, 
+                                text: cleanedSentence, 
+                                trans: "Tài liệu tải lên" 
+                            });
+                        }
+                    });
+                });
+            }
+        }
+        
         // Xử lý bù câu nếu thiếu (Luôn đảm bảo đủ 15 câu)
         let finalPool = [...extracted];
         
@@ -399,10 +499,19 @@
             });
         }
 
+        // Loại bỏ trùng lặp
+        finalPool = finalPool.filter((item, index, self) =>
+            index === self.findIndex(t => t.text === item.text)
+        );
+
         // Nếu sau khi bù vẫn không đủ (do fallback ít), lấy tối đa có thể nhưng giới hạn 15
         currentQuestions = finalPool.sort(() => 0.5 - Math.random()).slice(0, 15);
         
-        if(currentQuestions.length === 0) { alert("Vui lòng nhập liệu!"); return; }
+        if(currentQuestions.length === 0) { 
+            alert("Vui lòng nhập liệu hoặc tải file Word có từ được in đậm/gạch chân!"); 
+            return; 
+        }
+        
         renderUI();
     }
 
@@ -434,6 +543,7 @@
         window.scrollTo(0,0);
     }
 
+    // Các hàm còn lại giữ nguyên...
     function clearZone(zone) {
         if(zone.innerText !== "") {
             toggleBankWord(zone.innerText, false);
