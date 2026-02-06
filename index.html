@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>Be Heard| Vocabulary in use</title>
+    <title>Be Heard | Vocabulary in use</title>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/mammoth/1.6.0/mammoth.browser.min.js"></script>
     <link href="https://fonts.googleapis.com/css2?family=Nunito:wght@400;600;700;800;900&display=swap" rel="stylesheet">
     <style>
@@ -22,13 +22,15 @@
         body {
             font-family: 'Nunito', sans-serif;
             background: var(--bg);
-            /* NỀN CHẤM BI ĐẶC TRƯNG */
             background-image: radial-gradient(#dbeafe 15%, transparent 16%), radial-gradient(#dbeafe 15%, transparent 16%);
             background-size: 20px 20px;
             background-position: 0 0, 10px 10px;
             color: var(--primary);
             margin: 0; padding: 10px;
-            touch-action: manipulation;
+            /* Ngăn chặn các hành động mặc định gây lag trên mobile */
+            touch-action: pan-y; 
+            -webkit-user-select: none;
+            user-select: none;
         }
 
         .container {
@@ -110,18 +112,14 @@
 
         /* Ô TRỐNG CĂN GIỮA TUYỆT ĐỐI */
         .drop-zone {
-            display: inline-flex;
-            justify-content: center;
-            align-items: center;
-            min-width: 110px; height: 38px;
+            display: inline-flex; justify-content: center; align-items: center;
+            min-width: 110px; height: 40px;
             border-bottom: 3px solid var(--primary);
             margin: 0 5px; padding: 0 12px;
             background: rgba(3, 19, 131, 0.05);
             border-radius: 8px 8px 0 0;
-            vertical-align: middle;
-            color: var(--action);
-            transition: 0.3s;
-            cursor: pointer;
+            vertical-align: middle; color: var(--action);
+            transition: 0.2s; cursor: pointer;
         }
         .drop-zone.hovered { background: var(--accent); }
 
@@ -295,7 +293,22 @@
         });
         window.scrollTo(0,0);
     }
-
+// Xử lý khi chạm vào ô trống (Kết hợp với từ đã chọn)
+    function handleZoneClick(zone) {
+        if (selectedWordElement) {
+            // Nếu đang có từ được chọn -> Điền vào
+            if (zone.innerText) toggleWordState(zone.innerText, false);
+            zone.innerText = selectedWordElement.innerText;
+            toggleWordState(selectedWordElement.innerText, true);
+            
+            selectedWordElement.classList.remove('selected');
+            selectedWordElement = null;
+        } else if (zone.innerText) {
+            // Nếu ô đang có từ mà không chọn từ mới -> Xóa từ trong ô
+            toggleWordState(zone.innerText, false);
+            zone.innerText = '';
+        }
+    }
     function handleDrop(e) {
         e.preventDefault();
         e.target.classList.remove('hovered');
