@@ -517,13 +517,16 @@
             <div id="score-box" class="score-banner"></div>
             <div id="detailed-results"></div>
             <div class="result-actions">
-                <button class="btn btn-pdf" onclick="downloadPDF()">
-                    📥 Download PDF Worksheet
-                </button>
-                <button class="btn btn-primary" onclick="location.reload()">
-                    🔄 New Exercise
-                </button>
-            </div>
+    <button class="btn btn-pdf" onclick="downloadPDF()">
+        📥 Download PDF Worksheet
+    </button>
+    <button class="btn btn-action" onclick="doItAgain()">
+        🔁 Do It Again
+    </button>
+    <button class="btn btn-primary" onclick="location.reload()">
+        🔄 New Exercise
+    </button>
+</div>
         </div>
     </div>
 
@@ -1157,6 +1160,11 @@
         doc.save('vocabulary-fill-in-gaps.pdf');
         showToast('✅ PDF downloaded!');
     }
+function doItAgain() {
+    document.getElementById('result-view').classList.add('hidden');
+    document.getElementById('detailed-results').innerHTML = '';
+    renderExercise(); // xáo trộn lại word bank, reset toàn bộ gaps
+}
 </script>
 </body>
 </html>
