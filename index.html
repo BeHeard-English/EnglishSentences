@@ -651,7 +651,11 @@
                 e.target.classList.add('dragging');
             });
             div.addEventListener('dragend', e => e.target.classList.remove('dragging'));
-            // Touch / tap to select
+            // Touch drag (mobile / tablet)
+            div.addEventListener('touchstart', onTouchStart, { passive: true });
+            div.addEventListener('touchmove',  onTouchMove,  { passive: false });
+            div.addEventListener('touchend',   onTouchEnd,   { passive: true });
+            // Tap-to-fill fallback
             div.addEventListener('click', () => handleWordClick(div));
             bank.appendChild(div);
         });
@@ -810,8 +814,80 @@
     }
 
     // ══════════════════════════════════════════
-    // ── PDF DOWNLOAD — FILL IN THE GAPS WORKSHEET ──
+    // ── TOUCH DRAG (mobile / tablet) ──
     // ══════════════════════════════════════════
+    let touchDragWord = null;
+    let touchClone    = null;
+
+    function onTouchStart(e) {
+        const el = e.currentTarget;
+        if (el.classList.contains('used')) return;
+        touchDragWord = el;
+
+        // Clone nổi theo ngón tay
+        touchClone = el.cloneNode(true);
+        touchClone.style.cssText = `
+            position:fixed; z-index:9999; pointer-events:none;
+            opacity:0.93; transform:scale(1.13) rotate(-2deg);
+            transition:none; margin:0;
+            background:#FFD93D; border:2.5px solid #031383;
+            padding:4px 14px; border-radius:99px;
+            font-family:Nunito,sans-serif; font-weight:800;
+            font-size:0.85rem; color:#031383;
+            box-shadow:0 8px 22px rgba(0,0,0,0.22);
+            white-space:nowrap;
+        `;
+        document.body.appendChild(touchClone);
+        _moveTouchClone(e.touches[0]);
+        el.classList.add('used');
+    }
+
+    function onTouchMove(e) {
+        if (!touchClone) return;
+        e.preventDefault(); // chặn scroll khi đang kéo
+        _moveTouchClone(e.touches[0]);
+
+        // Highlight drop zone đang bị ngón tay đè lên
+        document.querySelectorAll('.drop-zone').forEach(z => z.classList.remove('hovered'));
+        const target = _getTouchTarget(e.touches[0]);
+        if (target && target.classList.contains('drop-zone')) target.classList.add('hovered');
+    }
+
+    function onTouchEnd(e) {
+        if (!touchClone) return;
+        touchClone.remove();
+        touchClone = null;
+        document.querySelectorAll('.drop-zone').forEach(z => z.classList.remove('hovered'));
+
+        const target = _getTouchTarget(e.changedTouches[0]);
+        if (target && target.classList.contains('drop-zone')) {
+            if (target.innerText) toggleWordInBank(target.innerText, false);
+            target.innerText = touchDragWord.innerText;
+            toggleWordInBank(touchDragWord.innerText, true);
+            updateProgress();
+        } else {
+            // Thả ra ngoài ô → trả lại word bank
+            touchDragWord.classList.remove('used');
+        }
+        touchDragWord = null;
+    }
+
+    function _moveTouchClone(touch) {
+        const w = touchClone.offsetWidth  || 60;
+        const h = touchClone.offsetHeight || 28;
+        touchClone.style.left = (touch.clientX - w / 2) + 'px';
+        touchClone.style.top  = (touch.clientY - h / 2 - 22) + 'px'; // nổi lên trên ngón tay
+    }
+
+    // Ẩn clone tạm để lấy element thật bên dưới
+    function _getTouchTarget(touch) {
+        touchClone.style.display = 'none';
+        const el = document.elementFromPoint(touch.clientX, touch.clientY);
+        touchClone.style.display = '';
+        return el;
+    }
+
+
     function downloadPDF() {
         if (!currentQuestions.length) { showToast('⚠️ No exercise loaded yet!'); return; }
         if (typeof window.jspdf === 'undefined') { showToast('⏳ PDF library loading, please retry...'); return; }
