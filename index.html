@@ -673,6 +673,83 @@
     let currentQuestions = [];
     let allAnswers = [];
 
+    // ── PASTE HANDLER (mobile + desktop) ──
+    // Mobile browsers thường không bảo toàn <b>/<strong> khi paste vào contenteditable.
+    // Ta intercept paste, chuẩn hóa HTML bold rồi chèn lại.
+    document.getElementById('input-area').addEventListener('paste', function(e) {
+        e.preventDefault();
+        const cd = e.clipboardData || window.clipboardData;
+        if (!cd) return;
+
+        // 1️⃣ Ưu tiên lấy HTML từ clipboard
+        let html = cd.getData('text/html');
+
+        if (html && html.trim().length > 0) {
+            // Chuẩn hóa: chuyển span[style*=bold] → <strong>, loại bỏ tag không cần thiết
+            const parser  = new DOMParser();
+            const parsed  = parser.parseFromString(html, 'text/html');
+
+            // Chuyển span/các element có font-weight bold sang <strong>
+            const BOLD_INLINE = [
+                'span[style*="font-weight:bold"]','span[style*="font-weight: bold"]',
+                'span[style*="font-weight:700"]', 'span[style*="font-weight: 700"]',
+                'span[style*="font-weight:800"]', 'span[style*="font-weight: 800"]',
+                'span[style*="font-weight:900"]', 'span[style*="font-weight: 900"]',
+            ].join(',');
+            parsed.querySelectorAll(BOLD_INLINE).forEach(el => {
+                const strong = document.createElement('strong');
+                strong.innerHTML = el.innerHTML;
+                el.replaceWith(strong);
+            });
+
+            // Giữ lại <b>, <strong>, <u>, <p>, <br>, <li> — bỏ hết attribute khác
+            const KEEP_TAGS  = new Set(['b','strong','u','p','br','li','ul','ol','div','span']);
+            function sanitize(node) {
+                if (node.nodeType === Node.TEXT_NODE) return node.cloneNode();
+                if (node.nodeType !== Node.ELEMENT_NODE) return null;
+                const tag = node.tagName.toLowerCase();
+                const clone = document.createElement(KEEP_TAGS.has(tag) ? tag : 'span');
+                node.childNodes.forEach(child => {
+                    const c = sanitize(child);
+                    if (c) clone.appendChild(c);
+                });
+                return clone;
+            }
+            const clean = sanitize(parsed.body);
+            const cleanHtml = clean ? clean.innerHTML : '';
+
+            // Chèn HTML vào vị trí con trỏ
+            const sel = window.getSelection();
+            if (sel && sel.rangeCount) {
+                const range = sel.getRangeAt(0);
+                range.deleteContents();
+                const frag = range.createContextualFragment(cleanHtml);
+                range.insertNode(frag);
+                sel.collapseToEnd();
+            } else {
+                document.execCommand('insertHTML', false, cleanHtml);
+            }
+            return;
+        }
+
+        // 2️⃣ Fallback: plain text — tự nhận **word** (markdown bold) hoặc chèn text thường
+        const text = cd.getData('text/plain') || '';
+        if (!text) return;
+
+        if (text.includes('**')) {
+            // Chuyển **word** → <strong>word</strong>
+            const lines   = text.split('\n');
+            const htmlOut = lines.map(line => {
+                const escaped = line.replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;');
+                const bolded  = escaped.replace(/\*\*(.*?)\*\*/g, '<strong>$1</strong>');
+                return `<p>${bolded}</p>`;
+            }).join('');
+            document.execCommand('insertHTML', false, htmlOut);
+        } else {
+            document.execCommand('insertText', false, text);
+        }
+    });
+
     // ── FILE UPLOAD ──
     document.getElementById('file-upload').addEventListener('change', function(e) {
         const reader = new FileReader();
@@ -699,13 +776,28 @@
         tempContainer.innerHTML = inputDiv.innerHTML;
         const paragraphs = tempContainer.querySelectorAll('p, li, div');
 
+        // Selector mở rộng: nhận bold từ tag chuẩn VÀ inline style (mobile clipboard)
+        const BOLD_SELECTOR = [
+            'b', 'strong', 'u',
+            '[style*="font-weight:bold"]',
+            '[style*="font-weight: bold"]',
+            '[style*="font-weight:700"]',
+            '[style*="font-weight: 700"]',
+            '[style*="font-weight:800"]',
+            '[style*="font-weight: 800"]',
+            '[style*="font-weight:900"]',
+            '[style*="font-weight: 900"]'
+        ].join(',');
+
         paragraphs.forEach(p => {
-            const nodes = p.querySelectorAll('b, strong, u');
+            const nodes = p.querySelectorAll(BOLD_SELECTOR);
             if (nodes.length > 0) {
                 let originalText = p.innerText.trim();
                 let cleanedText = cleanSentence(originalText);
                 let gaps = [];
                 nodes.forEach(n => {
+                    // Bỏ qua node lồng nhau (con của một node bold khác) để tránh duplicate
+                    if (n.closest(BOLD_SELECTOR) !== n) return;
                     let word = n.innerText.trim().replace(/[.,!?;:]+$/g, "");
                     if (word) gaps.push(word);
                 });
@@ -950,19 +1042,17 @@
         e.preventDefault(); // chặn scroll khi đang kéo từ
         _moveTouchClone(e.touches[0]);
 
-        // Highlight gap đang bị ngón tay đè lên
+        // Highlight gap gần ngón tay nhất (dùng proximity detection)
         document.querySelectorAll('.drop-zone').forEach(z => z.classList.remove('hovered'));
-        const target = _getElementUnderTouch(e.touches[0]);
-        const zone = target ? target.closest('.drop-zone') : null;
+        const zone = _findNearestDropZone(e.touches[0]);
         if (zone) zone.classList.add('hovered');
     }
 
     function onTouchEnd(e) {
         if (!touchClone) return;
 
-        // ⚠️ Phải lấy target TRƯỚC khi xóa / null clone
-        const target = _getElementUnderTouch(e.changedTouches[0]);
-        const zone   = target ? target.closest('.drop-zone') : null;
+        // Dùng proximity detection để tìm zone gần ngón tay nhất khi thả
+        const zone = _findNearestDropZone(e.changedTouches[0]);
 
         // Xóa clone khỏi DOM
         touchClone.remove();
@@ -990,7 +1080,33 @@
         touchClone.style.top  = (touch.clientY - h / 2 - 24) + 'px'; // nổi lên trên ngón tay
     }
 
-    // Ẩn clone tạm để elementFromPoint lấy đúng element bên dưới ngón tay
+    // Tìm drop-zone gần nhất: mở rộng vùng hit 28px mỗi phía để nhạy hơn trên mobile
+    function _findNearestDropZone(touch) {
+        const x = touch.clientX;
+        const y = touch.clientY;
+        const PROXIMITY = 28; // px padding quanh zone
+        let nearest  = null;
+        let minDist  = Infinity;
+
+        document.querySelectorAll('.drop-zone').forEach(zone => {
+            const r = zone.getBoundingClientRect();
+            const inExpanded = (
+                x >= r.left   - PROXIMITY &&
+                x <= r.right  + PROXIMITY &&
+                y >= r.top    - PROXIMITY &&
+                y <= r.bottom + PROXIMITY
+            );
+            if (!inExpanded) return;
+            // Khoảng cách tới tâm zone
+            const cx   = (r.left + r.right)  / 2;
+            const cy   = (r.top  + r.bottom) / 2;
+            const dist = Math.hypot(x - cx, y - cy);
+            if (dist < minDist) { minDist = dist; nearest = zone; }
+        });
+        return nearest;
+    }
+
+    // Ẩn clone tạm để elementFromPoint lấy đúng element bên dưới ngón tay (fallback)
     function _getElementUnderTouch(touch) {
         if (!touchClone) return document.elementFromPoint(touch.clientX, touch.clientY);
         touchClone.style.display = 'none';
