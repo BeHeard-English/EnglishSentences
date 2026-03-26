@@ -442,6 +442,47 @@
             .word-bank-container { padding: 10px 14px 12px; }
         }
 
+        /* ── QUESTION COUNT SELECTOR ── */
+        .count-selector {
+            display: flex; gap: 8px; justify-content: center;
+            margin-bottom: 18px;
+        }
+        .count-btn {
+            flex: 1;
+            padding: 10px 4px;
+            border-radius: 12px;
+            border: 2.5px solid var(--border);
+            background: #f8faff;
+            font-family: 'Nunito', sans-serif;
+            font-weight: 800; font-size: 1rem;
+            color: var(--text-muted);
+            cursor: pointer;
+            transition: all 0.15s;
+            text-align: center;
+            line-height: 1.2;
+        }
+        .count-btn small {
+            display: block;
+            font-size: 0.6rem;
+            letter-spacing: 1.5px;
+            text-transform: uppercase;
+            font-weight: 700;
+            opacity: 0.7;
+            margin-top: 1px;
+        }
+        .count-btn:hover {
+            border-color: var(--primary);
+            color: var(--primary);
+            background: #eef2ff;
+        }
+        .count-btn.active {
+            background: linear-gradient(135deg, var(--primary) 0%, var(--primary-light) 100%);
+            border-color: var(--primary-dark);
+            color: #fff;
+            box-shadow: 0 4px 0 var(--primary-dark), 0 6px 16px rgba(3,19,131,0.2);
+        }
+        .count-btn.active small { opacity: 0.8; }
+
         /* ── TOAST ── */
         .toast {
             position: fixed; bottom: 24px; left: 50%; transform: translateX(-50%) translateY(80px);
@@ -474,9 +515,17 @@
         </div>
         <p class="input-hint">Tip: <span>Ctrl+B</span> to bold the vocabulary words you want tested as gaps.</p>
 
-        <div class="btn-row" style="margin-top:18px;">
-            <button class="btn btn-primary" onclick="startExercise()">
-                🚀 Start Exercise (15 Questions)
+        <p class="section-label" style="margin-top:20px;">🔢 Number of questions</p>
+        <div class="count-selector">
+            <button class="count-btn" onclick="setCount(this,7)">7<small>quick</small></button>
+            <button class="count-btn" onclick="setCount(this,10)">10<small>short</small></button>
+            <button class="count-btn active" onclick="setCount(this,15)">15<small>standard</small></button>
+            <button class="count-btn" onclick="setCount(this,20)">20<small>full</small></button>
+        </div>
+
+        <div class="btn-row" style="margin-top:4px;">
+            <button class="btn btn-primary" id="start-btn" onclick="startExercise()">
+                🚀 Start Exercise · <span id="count-label">15</span> Questions
             </button>
             <div class="divider"><span>or</span></div>
             <input type="file" id="file-upload" accept=".docx" style="display:none">
@@ -672,6 +721,14 @@
 
     let currentQuestions = [];
     let allAnswers = [];
+    let selectedCount = 15;
+
+    function setCount(btn, n) {
+        document.querySelectorAll('.count-btn').forEach(b => b.classList.remove('active'));
+        btn.classList.add('active');
+        selectedCount = n;
+        document.getElementById('count-label').textContent = n;
+    }
 
     // ── PASTE HANDLER (mobile + desktop) ──
     // Mobile browsers thường không bảo toàn <b>/<strong> khi paste vào contenteditable.
@@ -805,10 +862,10 @@
             }
         });
 
-        let finalPool = extracted.sort(() => 0.5 - Math.random()).slice(0, 15);
+        let finalPool = extracted.sort(() => 0.5 - Math.random()).slice(0, selectedCount);
 
-        if (finalPool.length < 15) {
-            let needed = 15 - finalPool.length;
+        if (finalPool.length < selectedCount) {
+            let needed = selectedCount - finalPool.length;
             let extras = FALLBACK.sort(() => 0.5 - Math.random()).slice(0, needed);
             extras.forEach(m => {
                 finalPool.push({
